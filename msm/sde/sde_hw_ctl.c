@@ -88,7 +88,7 @@
 #define CTL_SSPP_MAX_RECTS		2
 
 #define SDE_REG_RESET_TIMEOUT_US        2000
-#define SDE_REG_WAIT_RESET_TIMEOUT_US        100000
+#define SDE_REG_WAIT_RESET_TIMEOUT_US        2000000
 
 #define UPDATE_MASK(m, idx, en)           \
 	((m) = (en) ? ((m) | BIT((idx))) : ((m) & ~BIT((idx))))

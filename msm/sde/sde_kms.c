@@ -73,6 +73,14 @@
 
 #define CREATE_TRACE_POINTS
 #include "sde_trace.h"
+#ifdef OPLUS_FEATURE_DISPLAY
+#include "oplus_display_sysfs_attrs.h"
+#include "oplus_display_interface.h"
+#endif /* OPLUS_FEATURE_DISPLAY */
+
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+#include "oplus_adfr.h"
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 
 #if IS_ENABLED(CONFIG_SMMU_PROXY)
 #include <smmu-proxy/include/uapi/linux/qti-smmu-proxy.h>
@@ -1089,6 +1097,11 @@ static void _sde_kms_drm_check_dpms(struct drm_atomic_state *old_state,
 			old_fps = 0;
 			old_mode = DRM_PANEL_EVENT_BLANK;
 		}
+#ifdef OPLUS_FEATURE_DISPLAY
+		if (oplus_display_ops.kms_drm_check_dpms_pre) {
+			oplus_display_ops.kms_drm_check_dpms_pre(old_fps, new_fps);
+		}
+#endif /* OPLUS_FEATURE_DISPLAY */
 
 		if ((old_mode != new_mode) || (old_fps != new_fps)) {
 			c_conn = to_sde_connector(connector);
@@ -1125,6 +1138,11 @@ static void _sde_kms_drm_check_dpms(struct drm_atomic_state *old_state,
 			notification.notif_data.early_trigger = is_pre_commit;
 			panel_event_notification_trigger(panel_type,
 					&notification);
+#ifdef OPLUS_FEATURE_DISPLAY
+			if (oplus_display_ops.kms_drm_check_dpms_post) {
+				oplus_display_ops.kms_drm_check_dpms_post(c_conn, is_pre_commit);
+			}
+#endif /* OPLUS_FEATURE_DISPLAY */
 		}
 	}
 
@@ -1352,6 +1370,10 @@ static void sde_kms_prepare_commit(struct msm_kms *kms,
 	rc = pm_runtime_resume_and_get(sde_kms->dev->dev);
 	if (rc < 0) {
 		SDE_ERROR("failed to enable power resources %d\n", rc);
+#ifdef OPLUS_FEATURE_DISPLAY
+		EXCEPTION_TRACKPOINT_REPORT("DisplayDriverID@@%d$$failed to enable power resources %d\n",
+				OPLUS_DISP_Q_ERROR_DCDC_CHECK_FAIL, rc);
+#endif /* OPLUS_FEATURE_DISPLAY */
 		SDE_EVT32(rc, SDE_EVTLOG_ERROR);
 		goto end;
 	}
@@ -1999,7 +2021,11 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.clk_ctrl = dsi_display_set_clk_state,
 		.clk_get_rate = dsi_display_get_clk_rate,
 		.idle_pc_ctrl = dsi_display_set_idle_pc_state,
+#ifdef OPLUS_FEATURE_DISPLAY
+		.set_power = oplus_display_set_power,
+#else /* OPLUS_FEATURE_DISPLAY */
 		.set_power = dsi_display_set_power,
+#endif /* OPLUS_FEATURE_DISPLAY */
 		.get_mode_info = dsi_conn_get_mode_info,
 		.get_dst_format = dsi_display_get_dst_format,
 		.post_kickoff = dsi_conn_post_kickoff,
@@ -2017,7 +2043,13 @@ static int _sde_kms_setup_displays(struct drm_device *dev,
 		.get_qsync_min_fps = dsi_conn_get_qsync_min_fps,
 		.get_avr_step_fps = dsi_conn_get_avr_step_fps,
 		.dcs_cmd_tx = dsi_conn_dcs_cmd_tx,
+#ifdef OPLUS_FEATURE_DISPLAY
+		/* OPLUS_FEATURE_ADFR, qsync enhance */
+		// enable qsync on/off cmds
+		.prepare_commit = dsi_display_pre_commit,
+#else /* OPLUS_FEATURE_DISPLAY */
 		.prepare_commit = dsi_conn_prepare_commit,
+#endif /* OPLUS_FEATURE_DISPLAY */
 		.set_submode_info = dsi_conn_set_submode_blob_info,
 		.get_num_lm_from_mode = dsi_conn_get_lm_from_mode,
 		.update_transfer_time = dsi_display_update_transfer_time,
