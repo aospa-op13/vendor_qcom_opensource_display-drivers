@@ -292,7 +292,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	}
 
 #ifdef OPLUS_FEATURE_DISPLAY
-	if (oplus_display_ops.panel_set_backlight_pre) {
+	if (oplus_display_ops.panel_set_backlight_pre && oplus_display_ops.get_aod_state && !oplus_display_ops.get_aod_state()) {
 		oplus_display_ops.panel_set_backlight_pre(dsi_display, &bl_lvl);
 	}
 #endif /* OPLUS_FEATURE_DISPLAY */

@@ -289,6 +289,7 @@ int oplus_display_set_power(struct drm_connector *connector,
 			oplus_ofp_power_mode_handle(display, power_mode);
 		}
 #endif /* OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT */
+        oplus_panel_event_data_notifier_trigger(display->panel, DRM_PANEL_EVENT_BLANK_LP, power_mode, true);
 		break;
 
 	case SDE_MODE_DPMS_ON:
