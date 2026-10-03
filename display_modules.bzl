@@ -153,6 +153,50 @@ module_entry(
             "msm/dsi/dsi_clk_manager.c",
             "msm/dsi/dsi_display_test.c",
          ],
+         "CONFIG_PXLW_IRIS" : [
+            "msm/iris/vendor/common/dsi_iris_cmpt_fpga.c",
+            "msm/iris/vendor/common/dsi_iris_lightup.c",
+            "msm/iris/vendor/common/dsi_iris_lp.c",
+            "msm/iris/vendor/common/dsi_iris_memc.c",
+            "msm/iris/vendor/common/dsi_iris_dbg.c",
+            "msm/iris/vendor/common/dsi_iris_dual.c",
+            "msm/iris/vendor/common/msm_iris_extended.c",
+            "msm/iris/vendor/common/sde_iris_extended.c",
+            "msm/iris/vendor/common/dsi_iris_extended.c",
+            "msm/iris/vendor/common/dsi_iris_cmpt_7750.c",
+            "msm/iris/core/common/pw_iris_cmpt_fpga.c",
+            "msm/iris/core/common/pw_iris_common.c",
+            "msm/iris/core/common/pw_iris_dbg.c",
+            "msm/iris/core/common/pw_iris_dts_fw.c",
+            "msm/iris/core/common/pw_iris_gpio.c",
+            "msm/iris/core/common/pw_iris_i2c.c",
+            "msm/iris/core/common/pw_iris_i3c.c",
+            "msm/iris/core/common/pw_iris_ioctl.c",
+            "msm/iris/core/common/pw_iris_lightup.c",
+            "msm/iris/core/common/pw_iris_lightup_ocp.c",
+            "msm/iris/core/common/pw_iris_loop_back.c",
+            "msm/iris/core/common/pw_iris_lp.c",
+            "msm/iris/core/common/pw_iris_lut.c",
+            "msm/iris/core/common/pw_iris_memc.c",
+            "msm/iris/core/common/pw_iris_pq.c",
+            "msm/iris/core/common/pw_iris_timing_switch.c",
+            "msm/iris/core/common/pw_iris_memc_helper.c",
+            "msm/iris/core/common/pw_iris_dual.c",
+            "msm/iris/core/common/pw_iris_drv.c",
+         ],
+         "CONFIG_PXLW_IRIS7P" : [
+            "msm/iris/vendor/iris7p/dsi_iris_lightup.c",
+            "msm/iris/core/iris7p/pw_iris_dbg.c",
+            "msm/iris/core/iris7p/pw_iris_ioctl.c",
+            "msm/iris/core/iris7p/pw_iris_lightup.c",
+            "msm/iris/core/iris7p/pw_iris_loop_back.c",
+            "msm/iris/core/iris7p/pw_iris_lp.c",
+            "msm/iris/core/iris7p/pw_iris_lut.c",
+            "msm/iris/core/iris7p/pw_iris_memc.c",
+            "msm/iris/core/iris7p/pw_iris_pq.c",
+            "msm/iris/core/iris7p/pw_iris_timing_switch.c",
+            "msm/iris/core/iris7p/pw_iris_drv_i7p.c",
+         ],
          "CONFIG_DSI_PARSER" : [
             "msm/dsi/dsi_parser.c",
          ],
@@ -188,9 +232,51 @@ module_entry(
                               "rotator/sde_rotator_r1_debug.c",
                               "rotator/sde_rotator_r3_debug.c"],
             },
+#ifdef OPLUS_FEATURE_DISPLAY
+         "OPLUS_FEATURE_DISPLAY" : [
+             "oplus/SM8750/oplus_display_utils.c",
+             "oplus/SM8750/oplus_display_sysfs_attrs.c",
+             "oplus/SM8750/oplus_display_dc_diming.c",
+             "oplus/SM8750/oplus_display_ffl.c",
+             "oplus/SM8750/oplus_display_device.c",
+             "oplus/SM8750/oplus_display_proc.c",
+             "oplus/SM8750/oplus_display_power.c",
+             "oplus/SM8750/oplus_display_effect.c",
+             "oplus/SM8750/oplus_display_device_ioctl.c",
+             "oplus/SM8750/oplus_display_bl.c",
+             "oplus/SM8750/oplus_display_interface.c",
+             "oplus/SM8750/oplus_display_pwm.c",
+             "oplus/SM8750/oplus_display_parse.c",
+             "oplus/SM8750/oplus_display_panel_cmd.c",
+             "oplus/SM8750/oplus_display_ext.c",
+             "oplus/SM8750/oplus_display_esd.c",
+             "oplus/SM8750/oplus_bl_ic_ktz8868.c",
+             "oplus/SM8750/oplus_display_dfte.c",
+         ],
+         "OPLUS_FEATURE_DISPLAY_ADFR" : [
+             "oplus/SM8750/oplus_adfr.c",
+         ],
+         "OPLUS_FEATURE_AP_UIR_DIMMING" : [
+             "oplus/SM8750/oplus_apuirdim.c",
+         ],
+         "OPLUS_FEATURE_DISPLAY_TEMP_COMPENSATION" : [
+             "oplus/SM8750/oplus_display_temp_compensation.c",
+         ],
+         "OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT" : [
+             "oplus/SM8750/oplus_onscreenfingerprint.c",
+         ],
+#endif /* OPLUS_FEATURE_DISPLAY */
+#ifdef OPLUS_FEATURE_TP_BASIC
+         "OPLUS_FEATURE_TP_BASIC" : [
+             "oplus/SM8750/oplus_display_notify_tp.c",
+         ],
+#endif /* OPLUS_FEATURE_TP_BASIC */
       },
       deps = [
          "//vendor/qcom/opensource/mm-drivers:mm_drivers_headers",
+#ifdef OPLUS_FEATURE_DISPLAY
+         "//vendor/oplus/kernel/device_info/oplus_fpga:oplus_bsp_fpga_monitor",
+#endif /* OPLUS_FEATURE_DISPLAY */
       ],
 
       # Configs are handled by config_options = []

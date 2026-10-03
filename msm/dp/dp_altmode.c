@@ -18,7 +18,6 @@
 #include "dp_debug.h"
 #include "sde_dbg.h"
 
-
 #define ALTMODE_CONFIGURE_MASK (0x3f)
 #define ALTMODE_HPD_STATE_MASK (0x40)
 #define ALTMODE_HPD_IRQ_MASK (0x80)
@@ -144,6 +143,18 @@ static int dp_altmode_notify(void *priv, void *data, size_t len)
 			altmode->dp_altmode.base.multi_func,
 			altmode->dp_altmode.base.hpd_high,
 			altmode->dp_altmode.base.hpd_irq, altmode->connected);
+
+#ifdef OPLUS_FEATURE_DISPLAY
+	if (is_project(24001) || is_project(24002) || is_project(24201)
+			|| is_project(24861)) {
+		if ((gpio_get_value(SM8750_AP_GPIO_OFFSET + OPLUS_DP_CONTROL_GPIO) == 0)
+				&& hpd_state == 1) {
+			DP_INFO("set gpio %d to high\n", OPLUS_DP_CONTROL_GPIO);
+			gpio_direction_output(SM8750_AP_GPIO_OFFSET + OPLUS_DP_CONTROL_GPIO, 1);
+			gpio_set_value(SM8750_AP_GPIO_OFFSET + OPLUS_DP_CONTROL_GPIO, 1);
+		}
+	}
+#endif /* OPLUS_FEATURE_DISPLAY */
 
 	if (!pin) {
 		/* Cable detach */

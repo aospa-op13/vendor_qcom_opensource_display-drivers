@@ -16,6 +16,9 @@
 #include "sde_hw_util.h"
 #include "sde_kms.h"
 #include <drm/msm_drm_aiqe.h>
+#if defined(CONFIG_PXLW_IRIS) || defined(CONFIG_PXLW_SOFT_IRIS)
+#include "dsi_iris_api.h"
+#endif
 
 /* Reserve space of 128 words for LUT dma payload set-up */
 #define REG_DMA_HEADERS_BUFFER_SZ (sizeof(u32) * 128)
@@ -5357,7 +5360,6 @@ void reg_dmav2_setup_dspp_igcv4(struct sde_hw_dspp *ctx, void *cfg)
 	data[j++] = lut_cfg->c2_last ? (u16)(lut_cfg->c2_last << 4) : (4095 << 4);
 	data[j++] = lut_cfg->c0_last ? (u16)(lut_cfg->c0_last << 4) : (4095 << 4);
 	data[j++] = lut_cfg->c1_last ? (u16)(lut_cfg->c1_last << 4) : (4095 << 4);
-
 	reg_dmav2_setup_dspp_igc_common(ctx, cfg, len, data, transfer_size_bytes);
 	kvfree(data);
 }
@@ -6429,7 +6431,11 @@ int reg_dmav1_setup_spr_pu_common(struct sde_hw_dspp *ctx, struct sde_hw_cp_cfg 
 
 		reg = APPLY_MASK_AND_SHIFT(roi_list->spr_roi[0].x1, 16, 0) |
 			APPLY_MASK_AND_SHIFT(roi_list->spr_roi[0].y1, 16, 16);
+
+		SDE_EVT32(roi_list->spr_roi[0].x1, roi_list->spr_roi[0].y1);
 	}
+
+	SDE_EVT32(0xdead, reg);
 
 	REG_DMA_INIT_OPS(dma_write_cfg, MDSS, SPR_PU_CFG, buffer);
 	REG_DMA_SETUP_OPS(dma_write_cfg, 0, NULL, 0, HW_BLK_SELECT, 0, 0, 0);

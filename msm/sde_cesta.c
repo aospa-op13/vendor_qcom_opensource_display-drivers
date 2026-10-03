@@ -25,6 +25,8 @@
 
 static struct sde_cesta *cesta_list[MAX_CESTA_COUNT] = {NULL, };
 
+void __iomem *sde_crmc_base, *sde_crm_client_base, *sde_crmb_pt_base, *sde_crmb_base;
+
 bool sde_cesta_is_enabled(u32 cesta_index)
 {
 	if (cesta_index >= MAX_CESTA_COUNT)
@@ -471,7 +473,8 @@ void sde_cesta_clk_bw_update(struct sde_cesta_client *client, struct sde_cesta_p
 	 */
 	if (params->post_commit) {
 		if ((client->vote_state == SDE_CESTA_BW_UPVOTE_CLK_DOWNVOTE)
-				|| (client->vote_state == SDE_CESTA_CLK_UPVOTE_BW_DOWNVOTE))
+				|| (client->vote_state == SDE_CESTA_CLK_UPVOTE_BW_DOWNVOTE)
+				|| (client->vote_state == SDE_CESTA_BW_CLK_DOWNVOTE))
 			goto skip_calc;
 		else
 			goto end;
@@ -536,15 +539,16 @@ skip_calc:
 	client->pwr_st_override = params->pwr_st_override;
 	client->enabled = params->enable;
 
-	if ((client->vote_state == SDE_CESTA_BW_CLK_UPVOTE)
-			|| (client->vote_state == SDE_CESTA_BW_CLK_DOWNVOTE)) {
+	if ((client->vote_state == SDE_CESTA_BW_CLK_UPVOTE) ||
+				(client->vote_state == SDE_CESTA_BW_CLK_DOWNVOTE && !params->enable)) {
 		_sde_cesta_clk_bw_vote(client, client->pwr_st_override,
 				params->data.core_clk_rate_ab, params->data.core_clk_rate_ib,
 				params->data.bw_ab, params->data.bw_ib);
 
 	} else if (params->post_commit &&
 			((client->vote_state == SDE_CESTA_BW_UPVOTE_CLK_DOWNVOTE)
-				|| (client->vote_state == SDE_CESTA_CLK_UPVOTE_BW_DOWNVOTE))) {
+				|| (client->vote_state == SDE_CESTA_CLK_UPVOTE_BW_DOWNVOTE)
+				|| (client->vote_state == SDE_CESTA_BW_CLK_DOWNVOTE))) {
 		client->pwr_st_override = true;
 		_sde_cesta_clk_bw_vote(client, client->pwr_st_override,
 				client_data->core_clk_rate_ab, client_data->core_clk_rate_ib,
@@ -1023,6 +1027,22 @@ static int sde_cesta_get_io_resources(struct msm_io_res *io_res, void *data)
 	return 0;
 }
 
+static void sde_cesta_vcd0_crmbw(struct sde_cesta *cesta)
+{
+	u32 sde_vcd0_bw_cp_lut[10] = {0}, i;
+	for (i = 0; i < 10; i++)
+		sde_vcd0_bw_cp_lut[i] = readl_relaxed(sde_crmb_base + 0x50 + (0x4 * i));
+
+	SDE_EVT32(sde_vcd0_bw_cp_lut[0], sde_vcd0_bw_cp_lut[1], sde_vcd0_bw_cp_lut[2],
+		sde_vcd0_bw_cp_lut[3], sde_vcd0_bw_cp_lut[4], sde_vcd0_bw_cp_lut[5],
+		sde_vcd0_bw_cp_lut[6], sde_vcd0_bw_cp_lut[7]);
+	pr_err("QIPL %d %d %d %d %d %d %d %d %d %d\n",
+		sde_vcd0_bw_cp_lut[0], sde_vcd0_bw_cp_lut[1], sde_vcd0_bw_cp_lut[2],
+		sde_vcd0_bw_cp_lut[3], sde_vcd0_bw_cp_lut[4], sde_vcd0_bw_cp_lut[5],
+		sde_vcd0_bw_cp_lut[6], sde_vcd0_bw_cp_lut[7], sde_vcd0_bw_cp_lut[8],
+		sde_vcd0_bw_cp_lut[9]);
+}
+
 int sde_cesta_bind(struct device *dev, struct device *master, void *data)
 {
 	struct platform_device *pdev = to_platform_device(dev);
@@ -1048,9 +1068,20 @@ int sde_cesta_bind(struct device *dev, struct device *master, void *data)
 
 	sde_dbg_reg_register_base("sde_rsc_wrapper", cesta->wrapper_io.base,
 			cesta->wrapper_io.len, msm_get_phys_addr(pdev, "wrapper"), SDE_DBG_RSC);
-
 	sde_dbg_reg_register_base("disp_cc", cesta->disp_cc_io.base,
 			cesta->disp_cc_io.len, msm_get_phys_addr(pdev, "disp_cc"), SDE_DBG_RSC);
+
+	if (get_eng_version() == FACTORY || get_eng_version() == AGING || get_eng_version() == HIGH_TEMP_AGING) {
+		sde_crm_client_base = ioremap(0x0AF21000, 0x51e0);
+		sde_crmb_base = ioremap(0x0AF27000, 0x84);
+		sde_crmb_pt_base = ioremap(0x0AF27400, 0x8c);
+		sde_crmc_base = ioremap(0x0AF27800, 0x400);
+
+		sde_dbg_reg_register_base("sde_crm_client_base", sde_crm_client_base, 0x51e0, 0x0AF21000, SDE_DBG_RSC);
+		sde_dbg_reg_register_base("sde_crmb_base", sde_crmb_base, 0x84, 0x0AF27000, SDE_DBG_RSC);
+		sde_dbg_reg_register_base("sde_crmb_pt_base", sde_crmb_pt_base, 0x8c, 0x0AF27400, SDE_DBG_RSC);
+		sde_dbg_reg_register_base("sde_crmc_base", sde_crmc_base, 0x400, 0x0AF27800, SDE_DBG_RSC);
+	}
 
 	for (i = 0; i < cesta->scc_count; i++) {
 		char blk_name[32];
@@ -1062,6 +1093,9 @@ int sde_cesta_bind(struct device *dev, struct device *master, void *data)
 
 	msm_register_vm_event(master, dev, &vm_event_ops, (void *)cesta);
 
+	if (get_eng_version() == FACTORY || get_eng_version() == AGING || get_eng_version() == HIGH_TEMP_AGING) {
+		sde_cesta_vcd0_crmbw(cesta);
+	}
 	return 0;
 }
 

@@ -13,6 +13,19 @@ def define_sun():
                     "msm_drm",
                 ],
                 config_options = [
+#ifdef OPLUS_FEATURE_DISPLAY
+                    "OPLUS_FEATURE_DISPLAY",
+                    "OPLUS_FEATURE_DISPLAY_ADFR",
+                    "OPLUS_FEATURE_DISPLAY_HIGH_PRECISION",
+                    "OPLUS_FEATURE_DISPLAY_TEMP_COMPENSATION",
+                    "OPLUS_FEATURE_DISPLAY_ONSCREENFINGERPRINT",
+                    "OPLUS_TRACKPOINT_REPORT",
+                    "OPLUS_FEATURE_APDMR",
+                    "OPLUS_FEATURE_AP_UIR_DIMMING",
+#endif /* OPLUS_FEATURE_DISPLAY */
+#ifdef OPLUS_FEATURE_TP_BASIC
+                    "OPLUS_FEATURE_TP_BASIC",
+#endif /* OPLUS_FEATURE_TP_BASIC */
                     "CONFIG_DRM_MSM_SDE",
                     "CONFIG_SYNC_FILE",
                     "CONFIG_DRM_MSM_DSI",
@@ -31,6 +44,10 @@ def define_sun():
                     "CONFIG_QCOM_SPEC_SYNC",
                     "CONFIG_MSM_EXT_DISPLAY",
                     "CONFIG_DRM_SDE_CESTA",
-                    "CONFIG_SMMU_PROXY"
+                    "CONFIG_SMMU_PROXY",
+#if defined(CONFIG_PXLW_IRIS)
+                    "CONFIG_PXLW_IRIS",
+                    "CONFIG_PXLW_IRIS7P",
+#endif /* CONFIG_PXLW_IRIS */
                 ],
             )
