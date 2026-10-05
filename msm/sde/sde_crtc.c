@@ -1228,7 +1228,6 @@ static int _sde_crtc_set_roi_v1(struct drm_crtc_state *state,
 	crtc = cstate->base.crtc;
 
 	memset(&cstate->user_roi_list, 0, sizeof(cstate->user_roi_list));
-	memset(&cstate->cached_user_roi_list, 0, sizeof(cstate->cached_user_roi_list));
 
 	if (!usr_ptr) {
 		SDE_DEBUG("crtc%d: rois cleared\n", DRMID(crtc));
@@ -3324,14 +3323,16 @@ enum sde_intf_mode sde_crtc_get_intf_mode(struct drm_crtc *crtc,
 		struct drm_crtc_state *cstate)
 {
 	struct drm_encoder *encoder;
+	struct sde_crtc *sde_crtc;
 
 	if (!crtc || !crtc->dev || !cstate) {
 		SDE_ERROR("invalid crtc\n");
 		return INTF_MODE_NONE;
 	}
 
+	sde_crtc = to_sde_crtc(crtc);
 	drm_for_each_encoder_mask(encoder, crtc->dev,
-			cstate->encoder_mask) {
+			sde_crtc->cached_encoder_mask) {
 		/* continue if copy encoder is encountered */
 		if (sde_crtc_state_in_clone_mode(encoder, cstate) ||
 			sde_encoder_is_loopback_display(encoder))
@@ -5783,8 +5784,6 @@ void sde_crtc_reset_sw_state(struct drm_crtc *crtc)
 	if (cstate->num_ds_enabled)
 		set_bit(SDE_CRTC_DIRTY_DEST_SCALER, cstate->dirty);
 
-	/* wipe out cached CRTC ROI so PU is seen as dirty next update */
-	memset(&cstate->cached_user_roi_list, 0, sizeof(cstate->cached_user_roi_list));
 	SDE_EVT32(0xcccc);
 }
 
@@ -5989,6 +5988,10 @@ static void sde_crtc_disable(struct drm_crtc *crtc)
 
 	/* Try to disable uidle */
 	sde_core_perf_crtc_update_uidle(crtc, false);
+
+	for (i = 0; i < SDE_SYS_CACHE_MAX; i++)
+		sde_crtc->new_perf.llcc_active[i] = 0;
+	sde_core_perf_crtc_update_llcc(crtc);
 
 	if (atomic_read(&sde_crtc->frame_pending)) {
 		SDE_ERROR("crtc%d frame_pending%d\n", crtc->base.id,
